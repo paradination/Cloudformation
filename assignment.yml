@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Assignment on IAM
+
+Resources:
+  myuser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: "Paradin-user"
+      Groups: 
+       - !Ref mygroup
+      Path: "/"
+      LoginProfile:
+        Password: loveall@1
+
+  accesskey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName:
+        !Ref myuser
+
+  mygroup:
+    Type: AWS::IAM::Group
+    Properties:
+      Path: "/myapplication/"
+      GroupName: "paradin-ggroup"
+
+
+  mypolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: myFullAccess
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action: '*'
+          Resource: '*'
+      Groups:
+      - !Ref mygroup
+
+

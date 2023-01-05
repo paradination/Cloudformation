@@ -1,0 +1,265 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Creating instance with features going forward
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+
+  InstanceType:
+      Description: WebServer EC2 instance type
+      Type: String
+      Default: t2.micro
+      AllowedValues:
+      - t1.micro
+      - t2.micro
+      - t2.large
+      - t2.xlarge
+      - t2.2xlarge
+      - m1.small
+      - m1.xlarge
+      - m6in.large
+
+      ConstraintDescription: must be a valid EC2 instance type.
+      
+  AMIID:
+    Description: The EC2 AMI id
+    Type: String
+    ConstraintDescription: Must be a valid AMI based on the region
+  
+  VPCID:
+    Description: enter a subnet ID here
+    Type: String
+
+  SubnetID:
+    Description: enter a subnet ID here
+    Type: String
+
+  VolumeSize:
+    Description: EBS Volume size
+    Type: Number
+    Default: 8
+    MinValue: 8
+    MaxValue: 100
+    ConstraintDescription: must be a number between 8 to 100 Gb  
+  
+  SecurityGroupPorts1:
+    Description: Simple Description of a Number Parameter, with MinValue and MaxValue
+    Type: Number
+    AllowedValues:
+      - 80
+      - 443
+      - 22  
+  SecurityGroupPorts2:
+    Description: Simple Description of a Number Parameter, with MinValue and MaxValue
+    Type: String
+    AllowedValues:
+      - "80"
+      - "443"
+      - "22"
+      - "none"
+
+  SecurityGroupPorts3:
+    Description: Simple Description of a Number Parameter, with MinValue and MaxValue
+    Type: String 
+    AllowedValues:
+      - "80"
+      - "443"
+      - "22"
+      - "none"
+
+  SSHLocation1:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: 0.0.0.0/0
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  SSHLocation2:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: '0'
+    MaxLength: '18'
+    Default: none
+
+  SSHLocation3:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: '0'
+    MaxLength: '18'
+    Default: none
+    
+
+  IpProtocol1:
+    Description: Allowed protocol for Security group
+    Type: String
+    Default: tcp
+
+  IpProtocol2:
+    Description: Allowed protocol for Security group
+    Type: String
+    Default: tcp
+
+  IpProtocol3:
+    Description: Allowed protocol for Security group
+    Type: String
+    Default: tcp
+
+  getpublicIP:
+    Description: Allowed protocol for Security group
+    Type: String
+    AllowedValues:    
+      - "true"
+      - "false"    
+
+  Owner:
+      Description: created by
+      Type: String
+      AllowedValues:    
+        - Ag
+        - Jay
+        - Paradin  
+
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: "enter for instance creation"
+        Parameters: 
+          - InstanceType 
+          - VPCID
+          - SubnetID
+          - AMIID
+          - Owner
+      - 
+        Label: 
+          default: "enter for security group"
+        Parameters: 
+          - SecurityGroupPorts1
+          - IpProtocol1
+          - SSHLocation1
+      - 
+        Label: 
+          default: "for additional security group"
+        Parameters: 
+          - SecurityGroupPorts2
+          - IpProtocol2
+          - SSHLocation2
+
+      - 
+        Label: 
+          default: "for additional security group"
+        Parameters: 
+          - SecurityGroupPorts3
+          - IpProtocol3
+          - SSHLocation3
+
+    ParameterLabels: 
+      InstanceType: 
+        default: "enter the instance type"
+      AMIID: 
+        default: "enter AMI for instance"
+      SecurityGroupPorts2: 
+        default: "select 'none' if no need to create"
+      SecurityGroupPorts3: 
+        default: "select 'none' if no need to create"
+
+Mappings:
+  KeypairUsage:
+    Ag:
+      keypair: Ag-Virginia
+    Jay:
+      keypair: jay
+
+
+Conditions: 
+  NotCreate2: !Not [!Equals [!Ref SecurityGroupPorts2 , none]]
+
+  NotCreate3: !Not [!Equals [!Ref SecurityGroupPorts3 , none]]
+
+
+# !ImportValue WebSeverSecurityGroupId # Fn::ImportValue
+
+Resources:
+
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId:
+        Ref: AMIID
+      InstanceType:
+        Ref: InstanceType
+      KeyName: !FindInMap [KeypairUsage, !Ref Owner, keypair]      
+      BlockDeviceMappings:
+        -
+          DeviceName: /dev/xvda
+          Ebs:
+            VolumeType: gp2            
+            DeleteOnTermination: true
+            VolumeSize: !Ref VolumeSize
+      NetworkInterfaces: 
+      - AssociatePublicIpAddress: !Ref getpublicIP
+        DeviceIndex: "0"
+        GroupSet: 
+          - Ref: InstanceSecurityGroup
+        SubnetId: !Ref SubnetID
+      Tags: 
+      - Key: Createdby
+        Value: !Ref Owner
+
+  
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH access via port 22
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+      - IpProtocol: !Ref IpProtocol1
+        FromPort: !Ref SecurityGroupPorts1
+        ToPort: !Ref SecurityGroupPorts1
+        CidrIp:
+          Ref: SSHLocation1
+
+      - IpProtocol:
+          Fn::If:
+            - NotCreate2
+            - Ref: IpProtocol2
+            - Ref: AWS::NoValue
+        FromPort:
+          Fn::If:
+            - NotCreate2
+            - Ref: SecurityGroupPorts2
+            - Ref: AWS::NoValue
+        ToPort: 
+          Fn::If:
+            - NotCreate2
+            - Ref: SecurityGroupPorts2
+            - Ref: AWS::NoValue
+        CidrIp:
+          Fn::If:
+            - NotCreate2
+            - Ref: SSHLocation2
+            - Ref: AWS::NoValue
+          
+      - IpProtocol:
+          Fn::If:
+            - NotCreate3
+            - Ref: IpProtocol3
+            - Ref: AWS::NoValue
+        FromPort:
+          Fn::If:
+            - NotCreate3
+            - Ref: SecurityGroupPorts3
+            - Ref: AWS::NoValue
+        ToPort: 
+          Fn::If:
+            - NotCreate3
+            - Ref: SecurityGroupPorts3
+            - Ref: AWS::NoValue
+        CidrIp:
+          Fn::If:
+            - NotCreate3
+            - Ref: SSHLocation3
+            - Ref: AWS::NoValue

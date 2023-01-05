@@ -1,0 +1,104 @@
+[
+    {
+        "ParameterKey"  : "VPCTemplateURL",
+        "ParameterValue": "https://cf-templates-pg5337k4k2ly-us-east-1.s3.amazonaws.com/project-createVPC-2pub-2priv-subnet.yml"
+    },
+    {
+        "ParameterKey"  : "EC2TemplateURL",
+        "ParameterValue": "https://cf-templates-pg5337k4k2ly-us-east-1.s3.amazonaws.com/project.yml"
+    },
+    {
+        "ParameterKey"  : "CidrBlockParadin",
+        "ParameterValue": "172.16.0.0/24"
+    },  
+    {
+        "ParameterKey"  : "CidrPublicAZ1a",
+        "ParameterValue": "172.16.0.0/26"
+    },
+    {
+        "ParameterKey"  : "CidrPrivateAZ1a",
+        "ParameterValue": "0.0.0.0/0"
+    },
+    {
+        "ParameterKey"  : "CidrPublicAZ1b",
+        "ParameterValue": "0.0.0.0/0"
+    },
+    {
+        "ParameterKey"  : "CidrPrivateAZ1b",
+        "ParameterValue": "0.0.0.0/0"
+    },
+    {
+        "ParameterKey"  : "Accesstointernet",
+        "ParameterValue": "true"
+    },
+    {
+        "ParameterKey"  : "DnsHostnames",
+        "ParameterValue": "true"
+    },  
+    {
+        "ParameterKey"  : "DnsSupport",
+        "ParameterValue": "true"
+    },
+    {
+        "ParameterKey"  : "Name",
+        "ParameterValue": "VPC-ec2"
+    },
+    {
+        "ParameterKey"  : "Team",
+        "ParameterValue": "Devops"
+    },
+    {
+        "ParameterKey"  : "Owner",
+        "ParameterValue": "Ag"
+    },
+    {
+        "ParameterKey"  : "InstanceType",
+        "ParameterValue": "t2.xlarge"
+    },
+    {
+        "ParameterKey"  : "VolumeSize",
+        "ParameterValue": "20"
+    },
+    {
+        "ParameterKey"  : "AMIID",
+        "ParameterValue": "ami-0b0dcb5067f052a63"
+    },
+    {
+        "ParameterKey"  : "SecurityGroupPorts1",
+        "ParameterValue": "80"
+    },
+    {
+        "ParameterKey"  : "SecurityGroupPorts2",
+        "ParameterValue": "22"
+    },
+    {
+        "ParameterKey"  : "SecurityGroupPorts3",
+        "ParameterValue": "443"
+    },
+    {
+        "ParameterKey"  : "SSHLocation1",
+        "ParameterValue": "0.0.0.0/0"
+    },  
+    {
+        "ParameterKey"  : "SSHLocation2",
+        "ParameterValue": "0.0.0.0/0"
+    },
+    {
+        "ParameterKey"  : "SSHLocation3",
+        "ParameterValue": "0.0.0.0/0"
+    },
+    {
+        "ParameterKey"  : "IpProtocol1",
+        "ParameterValue": "tcp"
+    },
+    {
+        "ParameterKey"  : "IpProtocol2",
+        "ParameterValue": "tcp"
+    },   
+    {
+        "ParameterKey"  : "IpProtocol3",
+        "ParameterValue": "tcp"
+    }
+
+
+]

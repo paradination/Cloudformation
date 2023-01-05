@@ -1,0 +1,365 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Creating VPC, RT and Subnets
+
+Parameters:
+
+  CidrBlockParadin:
+    Description: Ip range for VPC cidr block
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  CidrPublicAZ1a:   
+    Description: Ip range for Public Subnet AZ1a cidr block
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: '0.0.0.0/0'
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  CidrPrivateAZ1a:
+    Description: Ip range for Private Subnet AZ1a cidr block
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: '0.0.0.0/0'
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  CidrPublicAZ1b:
+    Description: Ip range for Public Subnet AZ1b cidr block
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: '0.0.0.0/0'
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  CidrPrivateAZ1b:
+    Description: Ip range for Private Subnet AZ1b cidr block
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: '0.0.0.0/0'
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  Accesstointernet:
+      Description: internet access
+      Type: String
+      AllowedValues:    
+        - "true"
+        - "false"
+
+  DnsHostnames:
+      Description: for enable dns hostname
+      Type: String
+      AllowedValues:    
+        - "true"
+        - "false"
+
+  DnsSupport:
+      Description: For enable dns support
+      Type: String
+      AllowedValues:    
+        - "true"
+        - "false"
+
+  Name:
+    Description: enter resource name
+    Type: String
+    MinLength: '3'
+    MaxLength: '18'
+
+  Team:
+      Description: enter your team name
+      Type: String
+      AllowedValues:    
+        - Devops
+        - Software
+        - Design
+
+  Owner:
+      Description: created by
+      Type: String
+      AllowedValues:    
+        - Ag
+        - Jay
+        - Paradin
+
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: "enter resource name"
+        Parameters: 
+          - Name
+      - 
+        Label: 
+          default: "who are you?"
+        Parameters: 
+          - Owner
+          - Team
+      - 
+        Label: 
+          default: "VPC and 4 Subnet CIDR"
+        Parameters: 
+          - CidrBlockParadin
+          - CidrPublicAZ1a   
+          - CidrPrivateAZ1a
+          - CidrPublicAZ1b
+          - CidrPrivateAZ1b
+      - 
+        Label: 
+          default: "internet"
+        Parameters: 
+          - Accesstointernet
+
+      - 
+        Label: 
+          default: "answer dns questions"
+        Parameters: 
+          - DnsHostnames
+          - DnsSupport
+          - SSHLocation1
+
+    ParameterLabels: 
+      CidrBlockParadin: 
+        default: "enter your VPC net CIDR, recommend 172.16.0.0/24"
+      CidrPublicAZ1a : 
+        default: "enter public subnet for AZ1a, recommend 172.16.0.0/26"
+      CidrPrivateAZ1a: 
+        default: "enter private subnet for AZ1a, recommend 172.16.0.64/26"
+      CidrPublicAZ1b: 
+        default: "enter public subnet for AZ1b, recommend 172.16.0.128/26"
+      CidrPrivateAZ1b: 
+        default: "enter private subnet for AZ1b, recommend 172.16.0.192/26"
+
+      DnsHostnames: 
+        default: "do you want a DNS Hostname"
+      DnsSupport: 
+        default: "do you want a DNS Support"
+      Accesstointernet: 
+        Accesstointernet: "do you want to access the internet"
+
+
+Conditions: 
+  InternetAccessCond: !Equals [!Ref Accesstointernet, 'true']
+  SubnetCond1: !Not [!Equals [!Ref CidrPublicAZ1a , '0.0.0.0/0']]
+  SubnetCond2: !Not [!Equals [!Ref CidrPrivateAZ1a , '0.0.0.0/0']]
+  SubnetCond3: !Not [!Equals [!Ref CidrPublicAZ1b , '0.0.0.0/0']]
+  SubnetCond4: !Not [!Equals [!Ref CidrPrivateAZ1b , '0.0.0.0/0']]
+
+  MyAndConditon1: !And
+  - !Condition InternetAccessCond
+  - !Condition SubnetCond1
+
+  MyAndConditon3: !And
+  - !Condition InternetAccessCond
+  - !Condition SubnetCond3
+  
+Resources:
+
+  CreateVPC:
+    Type: AWS::EC2::VPC
+    Properties: 
+      CidrBlock: !Ref CidrBlockParadin
+      EnableDnsHostnames: !Ref DnsHostnames
+      EnableDnsSupport: !Ref DnsSupport
+      Tags: 
+      - Key: Name
+        Value: !Ref Name
+      - Key: Team
+        Value: !Ref Team
+      - Key: Createdby
+        Value: !Ref Owner
+
+  PublicAZ1a:
+    Type: AWS::EC2::Subnet
+    Condition: SubnetCond1
+    Properties:
+      VpcId:
+        Ref: CreateVPC
+      CidrBlock: !Ref CidrPublicAZ1a
+      AvailabilityZone: "us-east-1a"
+      Tags: 
+      - Key: Name
+        Value: !Ref Name
+      - Key: Team
+        Value: !Ref Team
+      - Key: Createdby
+        Value: !Ref Owner
+
+  PrivateAZ1a:
+    Type: AWS::EC2::Subnet
+    Condition: SubnetCond2
+    Properties:
+      VpcId:
+        Ref: CreateVPC
+      CidrBlock: !Ref CidrPrivateAZ1a
+      AvailabilityZone: "us-east-1a"
+      Tags: 
+      - Key: Name
+        Value: !Ref Name
+      - Key: Team
+        Value: !Ref Team
+      - Key: Createdby
+        Value: !Ref Owner
+
+  PublicAZ1b:
+    Type: AWS::EC2::Subnet
+    Condition: SubnetCond3
+    Properties:
+      VpcId:
+        Ref: CreateVPC
+      CidrBlock: !Ref CidrPublicAZ1b
+      AvailabilityZone: "us-east-1b"
+      Tags: 
+      - Key: Name
+        Value: !Ref Name
+      - Key: Team
+        Value: !Ref Team
+      - Key: Createdby
+        Value: !Ref Owner
+
+  PrivateAZ1b:
+    Type: AWS::EC2::Subnet
+    Condition: SubnetCond4
+    Properties:
+      VpcId:
+        Ref: CreateVPC
+      CidrBlock: !Ref CidrPrivateAZ1b
+      AvailabilityZone: "us-east-1b"
+      Tags: 
+      - Key: Name
+        Value: !Ref Name
+      - Key: Team
+        Value: !Ref Team
+      - Key: Createdby
+        Value: !Ref Owner
+
+  myInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Condition: InternetAccessCond
+    Properties:
+      Tags: 
+      - Key: Name
+        Value: !Ref Name
+      - Key: Team
+        Value: !Ref Team
+      - Key: Createdby
+        Value: !Ref Owner
+
+  myRouteTable:
+    Type: AWS::EC2::RouteTable
+    Condition: InternetAccessCond
+    Properties:
+      VpcId:  
+        Ref: CreateVPC
+      Tags: 
+      - Key: Name
+        Value: !Ref Name
+      - Key: Team
+        Value: !Ref Team
+      - Key: Createdby
+        Value: !Ref Owner
+
+  AttachIGW2VPC:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Condition: InternetAccessCond
+    Properties: 
+      InternetGatewayId: !Ref myInternetGateway
+      VpcId: !Ref CreateVPC
+
+  IGW:
+    Type: AWS::EC2::Route
+    Condition: InternetAccessCond
+    Properties:
+      RouteTableId:
+        !Ref myRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        !Ref myInternetGateway
+
+
+  SubnetAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Condition: MyAndConditon1
+      Properties: 
+        RouteTableId: !Ref myRouteTable
+        SubnetId:
+            Fn::If:
+              - SubnetCond1
+              - Ref: PublicAZ1a
+              - Ref: AWS::NoValue
+
+  SubnetAssociation2:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Condition: MyAndConditon3
+      Properties: 
+        RouteTableId: !Ref myRouteTable
+        SubnetId:
+            Fn::If:
+              - SubnetCond3
+              - Ref: PublicAZ1b
+              - Ref: AWS::NoValue
+
+Outputs:
+
+  vpcID:
+    Description: VPC id to export to other devices.
+    Value: !Ref CreateVPC
+    Export:
+      Name: myVPCid
+
+  IGWID:
+    Description: internet gateway name
+    Condition: InternetAccessCond
+    Value: !GetAtt
+      - myInternetGateway
+      - InternetGatewayId
+    Export:
+      Name: myIGW
+
+  RTID:
+    Description: route table name
+    Condition: InternetAccessCond
+    Value: !GetAtt
+      - myRouteTable
+      - RouteTableId
+    Export:
+      Name: rtID
+
+  SubnetIDPublicAZ1a:
+    Description: Subnet IDs for public AZ 1a
+    Condition: SubnetCond1
+    Value: !Ref PublicAZ1a
+    Export:
+      Name: PublicAZ1aSubnetID
+
+  SubnetIDPrivateAZ1a:
+    Description: Subnet IDs for public AZ 1a
+    Condition: SubnetCond2
+    Value: !Ref PrivateAZ1a
+    Export:
+      Name: PrivateAZ1aSubnetID
+
+  SubnetIDPublicAZ1b:
+    Description: Subnet IDs for public AZ 1a
+    Condition: SubnetCond3
+    Value: !Ref PublicAZ1b
+    Export:
+      Name: PublicAZ1bSubnetID
+
+  SubnetIDPrivateAZ1b:
+    Description: Subnet IDs for public AZ 1a
+    Condition: SubnetCond4
+    Value: !Ref PrivateAZ1b
+    Export:
+      Name: PrivateAZ1bSubnetID
+

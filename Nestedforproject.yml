@@ -1,0 +1,478 @@
+# Nasted templates
+# Dependencies: Create an s3 bucket and upload security-group.yml & ec2.yml
+# & refer those endpoints while creatint this main template.
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Template to create nasted templates
+
+Parameters:
+
+  VPCTemplateURL:
+    Description: URL of the nested Security group stack template
+    Type: String
+    Default: "https://cf-templates-pg5337k4k2ly-us-east-1.s3.amazonaws.com/project-createVPC-2pub-2priv-subnet.yml"
+  
+  EC2TemplateURL:
+    Description: URL of the nested EC2 instance stack template
+    Type: String
+    Default: "https://cf-templates-pg5337k4k2ly-us-east-1.s3.amazonaws.com/project.yml"
+  
+  CidrBlockParadin:
+    Description: Ip range for VPC cidr block
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  CidrPublicAZ1a:   
+    Description: Ip range for Public Subnet AZ1a cidr block
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: '0.0.0.0/0'
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  CidrPrivateAZ1a:
+    Description: Ip range for Private Subnet AZ1a cidr block
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: '0.0.0.0/0'
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  CidrPublicAZ1b:
+    Description: Ip range for Public Subnet AZ1b cidr block
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: '0.0.0.0/0'
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  CidrPrivateAZ1b:
+    Description: Ip range for Private Subnet AZ1b cidr block
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: '0.0.0.0/0'
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+      
+  Accesstointernet:
+      Description: internet access
+      Type: String
+      AllowedValues:    
+        - "true"
+        - "false"
+
+  DnsHostnames:
+      Description: for enable dns hostname
+      Type: String
+      AllowedValues:    
+        - "true"
+        - "false"
+
+  DnsSupport:
+      Description: For enable dns support
+      Type: String
+      AllowedValues:    
+        - "true"
+        - "false"
+
+  Name:
+    Description: enter resource name
+    Type: String
+    MinLength: '3'
+    MaxLength: '18'
+
+  Team:
+      Description: enter your team name
+      Type: String
+      AllowedValues:    
+        - Devops
+        - Software
+        - Design
+
+  Owner:
+      Description: created by
+      Type: String
+      AllowedValues:    
+        - Ag
+        - Jay
+        - Paradin
+
+  InstanceType:
+      Description: WebServer EC2 instance type
+      Type: String
+      Default: t2.micro
+      AllowedValues:
+      - t1.micro
+      - t2.micro
+      - t2.large
+      - t2.xlarge
+      - t2.2xlarge
+      - m1.small
+      - m1.xlarge
+      - m6in.large
+
+      ConstraintDescription: must be a valid EC2 instance type.
+  
+  AMIID:
+    Description: The EC2 AMI id
+    Type: String
+    Default: 'ami-0b0dcb5067f052a63'
+    ConstraintDescription: Must be a valid AMI based on the region
+
+  VolumeSize:
+    Description: EBS Volume size'
+    Type: Number
+    Default: 8
+    MinValue: 8
+    MaxValue: 100
+    ConstraintDescription: must be a number between 8 to 100 Gb  
+  
+  SecurityGroupPorts1:
+    Description: Simple Description of a Number Parameter, with MinValue and MaxValue
+    Type: Number
+    AllowedValues:
+      - 80
+      - 443
+      - 22  
+  SecurityGroupPorts2:
+    Description: Simple Description of a Number Parameter, with MinValue and MaxValue
+    Type: String
+    AllowedValues:
+      - "80"
+      - "443"
+      - "22"
+      - "none"
+
+  SecurityGroupPorts3:
+    Description: Simple Description of a Number Parameter, with MinValue and MaxValue
+    Type: String 
+    AllowedValues:
+      - "80"
+      - "443"
+      - "22"
+      - "none"
+
+  SSHLocation1:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: 0.0.0.0/0
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  SSHLocation2:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: '0'
+    MaxLength: '18'
+    Default: none
+
+  SSHLocation3:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: '0'
+    MaxLength: '18'
+    Default: none
+    
+
+  IpProtocol1:
+    Description: Allowed protocol for Security group
+    Type: String
+    Default: tcp
+
+  IpProtocol2:
+    Description: Allowed protocol for Security group
+    Type: String
+    Default: tcp
+
+  IpProtocol3:
+    Description: Allowed protocol for Security group
+    Type: String
+    Default: tcp
+
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups:
+      - 
+        Label:
+          default: "Network and Instance resources URL"
+        Parameters: 
+          - VPCTemplateURL
+          - EC2TemplateURL
+
+      - 
+        Label: 
+          default: "enter resource name"
+        Parameters: 
+          - Name
+      - 
+        Label: 
+          default: "who are you?"
+        Parameters: 
+          - Owner
+          - Team
+      - 
+        Label: 
+          default: "VPC CIDR"
+        Parameters: 
+          - CidrBlockParadin
+
+      - 
+        Label: 
+          default: "enter 1 CIDR to launch EC2 on"
+        Parameters: 
+          - CidrPublicAZ1a   
+          - CidrPrivateAZ1a
+          - CidrPublicAZ1b
+          - CidrPrivateAZ1b
+      - 
+        Label: 
+          default: "internet"
+        Parameters: 
+          - Accesstointernet
+
+      - 
+        Label: 
+          default: "answer dns questions"
+        Parameters: 
+          - DnsHostnames
+          - DnsSupport
+      - 
+        Label: 
+          default: "EC2 creation"
+        Parameters: 
+          - InstanceType
+          - AMIID
+          - Owner
+      - 
+        Label: 
+          default: "enter for security group"
+        Parameters: 
+          - SecurityGroupPorts1
+          - IpProtocol1
+          - SSHLocation1
+      - 
+        Label: 
+          default: "for additional security group"
+        Parameters: 
+          - SecurityGroupPorts2
+          - IpProtocol2
+          - SSHLocation2
+
+      - 
+        Label: 
+          default: "for additional security group"
+        Parameters: 
+          - SecurityGroupPorts3
+          - IpProtocol3
+          - SSHLocation3
+
+    ParameterLabels: 
+      InstanceType: 
+        default: "enter the instance type"
+      AMIID: 
+        default: "enter AMI for instance"
+      SecurityGroupPorts2: 
+        default: "select 'none' if no need to create"
+      SecurityGroupPorts3: 
+        default: "select 'none' if no need to create"
+      CidrBlockParadin: 
+        default: "enter your VPC net CIDR, recommend 172.16.0.0/24"
+      CidrPublicAZ1a : 
+        default: "enter public subnet for AZ1a, recommend 172.16.0.0/26"
+      CidrPrivateAZ1a: 
+        default: "enter private subnet for AZ1a, recommend 172.16.0.64/26"
+      CidrPublicAZ1b: 
+        default: "enter public subnet for AZ1b, recommend 172.16.0.128/26"
+      CidrPrivateAZ1b: 
+        default: "enter private subnet for AZ1b, recommend 172.16.0.192/26"
+
+      DnsHostnames: 
+        default: "do you want a DNS Hostname"
+      DnsSupport: 
+        default: "do you want a DNS Support"
+      Accesstointernet: 
+        Accesstointernet: "do you want to access the internet"
+
+Conditions:
+  notcreate1: !Not [!Equals [!Ref CidrPublicAZ1a , '0.0.0.0/0']]
+  notcreate2: !Not [!Equals [!Ref CidrPrivateAZ1a , '0.0.0.0/0']]
+  notcreate3: !Not [!Equals [!Ref CidrPublicAZ1b , '0.0.0.0/0']]
+  notcreate4: !Not [!Equals [!Ref CidrPrivateAZ1b , '0.0.0.0/0']]
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Ref VPCTemplateURL
+      Parameters:
+          CidrBlockParadin: !Ref CidrBlockParadin
+          CidrPublicAZ1a: !Ref CidrPublicAZ1a
+          CidrPrivateAZ1a: !Ref CidrPrivateAZ1a
+          CidrPublicAZ1b: !Ref CidrPublicAZ1b
+          CidrPrivateAZ1b: !Ref CidrPrivateAZ1b
+          Accesstointernet: !Ref Accesstointernet
+          DnsHostnames: !Ref DnsHostnames
+          DnsSupport: !Ref DnsSupport
+          Name: !Ref Name
+          Team: !Ref Team
+          Owner: !Ref Owner
+      TimeoutInMinutes: 5
+
+  EC2InstanceStack1:
+    Type: AWS::CloudFormation::Stack
+    Condition: notcreate1
+    DependsOn: VPCStack
+    Properties:
+      TemplateURL: !Ref EC2TemplateURL
+      Parameters:
+        SubnetID:          
+            Fn::GetAtt: 
+            - VPCStack
+            - Outputs.SubnetIDPublicAZ1a
+        VPCID: 
+            Fn::GetAtt: 
+            - VPCStack
+            - Outputs.vpcID
+        InstanceType: !Ref InstanceType
+        AMIID: !Ref AMIID
+        VolumeSize: !Ref VolumeSize
+        getpublicIP: "true"
+        SecurityGroupPorts1: !Ref SecurityGroupPorts1
+        SecurityGroupPorts2: !Ref SecurityGroupPorts2
+        SecurityGroupPorts3: !Ref SecurityGroupPorts3
+        SSHLocation1: !Ref SSHLocation1
+        SSHLocation2: !Ref SSHLocation2
+        SSHLocation3: !Ref SSHLocation3
+        IpProtocol1: !Ref IpProtocol1
+        IpProtocol2: !Ref IpProtocol2
+        IpProtocol3: !Ref IpProtocol3
+        Owner: !Ref Owner
+      TimeoutInMinutes: 10
+
+  EC2InstanceStack2:
+    Type: AWS::CloudFormation::Stack
+    Condition: notcreate2
+    DependsOn: VPCStack
+    Properties:
+      TemplateURL: !Ref EC2TemplateURL
+      Parameters:
+        SubnetID:          
+            Fn::GetAtt: 
+            - VPCStack
+            - Outputs.SubnetIDPrivateAZ1a
+        VPCID: 
+            Fn::GetAtt: 
+            - VPCStack
+            - Outputs.vpcID
+        InstanceType: !Ref InstanceType
+        AMIID: !Ref AMIID
+        VolumeSize: !Ref VolumeSize
+        getpublicIP: "false"
+        SecurityGroupPorts1: !Ref SecurityGroupPorts1
+        SecurityGroupPorts2: !Ref SecurityGroupPorts2
+        SecurityGroupPorts3: !Ref SecurityGroupPorts3
+        SSHLocation1: !Ref SSHLocation1
+        SSHLocation2: !Ref SSHLocation2
+        SSHLocation3: !Ref SSHLocation3
+        IpProtocol1: !Ref IpProtocol1
+        IpProtocol2: !Ref IpProtocol2
+        IpProtocol3: !Ref IpProtocol3
+        Owner: !Ref Owner
+      TimeoutInMinutes: 10
+
+  EC2InstanceStack3:
+    Type: AWS::CloudFormation::Stack
+    Condition: notcreate3
+    DependsOn: VPCStack
+    Properties:
+      TemplateURL: !Ref EC2TemplateURL
+      Parameters:
+        SubnetID:          
+            Fn::GetAtt: 
+            - VPCStack
+            - Outputs.SubnetIDPublicAZ1b
+        VPCID: 
+            Fn::GetAtt: 
+            - VPCStack
+            - Outputs.vpcID
+        InstanceType: !Ref InstanceType
+        AMIID: !Ref AMIID
+        VolumeSize: !Ref VolumeSize
+        getpublicIP: "true"
+        SecurityGroupPorts1: !Ref SecurityGroupPorts1
+        SecurityGroupPorts2: !Ref SecurityGroupPorts2
+        SecurityGroupPorts3: !Ref SecurityGroupPorts3
+        SSHLocation1: !Ref SSHLocation1
+        SSHLocation2: !Ref SSHLocation2
+        SSHLocation3: !Ref SSHLocation3
+        IpProtocol1: !Ref IpProtocol1
+        IpProtocol2: !Ref IpProtocol2
+        IpProtocol3: !Ref IpProtocol3
+        Owner: !Ref Owner
+      TimeoutInMinutes: 10
+
+  EC2InstanceStack4:
+    Type: AWS::CloudFormation::Stack
+    Condition: notcreate4
+    DependsOn: VPCStack
+    Properties:
+      TemplateURL: !Ref EC2TemplateURL
+      Parameters:
+        SubnetID:          
+            Fn::GetAtt: 
+            - VPCStack
+            - Outputs.SubnetIDPrivateAZ1b
+        VPCID: 
+            Fn::GetAtt: 
+            - VPCStack
+            - Outputs.vpcID
+        InstanceType: !Ref InstanceType
+        AMIID: !Ref AMIID
+        VolumeSize: !Ref VolumeSize
+        getpublicIP: "false"
+        SecurityGroupPorts1: !Ref SecurityGroupPorts1
+        SecurityGroupPorts2: !Ref SecurityGroupPorts2
+        SecurityGroupPorts3: !Ref SecurityGroupPorts3
+        SSHLocation1: !Ref SSHLocation1
+        SSHLocation2: !Ref SSHLocation2
+        SSHLocation3: !Ref SSHLocation3
+        IpProtocol1: !Ref IpProtocol1
+        IpProtocol2: !Ref IpProtocol2
+        IpProtocol3: !Ref IpProtocol3
+        Owner: !Ref Owner
+      TimeoutInMinutes: 10
+
+
+Outputs:
+  SGStack:
+    Value: !Ref VPCStack
+    Description: VPC Stack
+
+  EC2Stack1:
+    Value: !Ref EC2InstanceStack1
+    Description: ec2 Stack
+    Condition: notcreate1
+  
+  EC2Stack2:
+    Value: !Ref EC2InstanceStack2
+    Description: ec2  Stack
+    Condition: notcreate2
+
+  EC2Stack3:
+    Value: !Ref EC2InstanceStack3
+    Description: ec2  Stack
+    Condition: notcreate3
+
+  EC2Stack4:
+    Value: !Ref EC2InstanceStack4
+    Description: ec2 Stack
+    Condition: notcreate4

@@ -1,0 +1,7 @@
+
+create
+aws cloudformation create-stack --stack-name vpc-ec2 --template-body file://Nestedforproject.yml --parameters file://parameter-cli-nested.json --capabilities CAPABILITY_AUTO_EXPAND --region us-east-1
+
+
+Delete
+aws cloudformation delete-stack --stack-name vpc-ec2 --region us-east-1

@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Assignment on IAM, creating them together
+
+Resources:
+
+  myuser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: "Paradin-user"
+      Path: "/"
+      LoginProfile:
+        Password: loveall@1
+
+  mypolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: "myfullaccess"
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action: '*'
+          Resource: '*'
+      Users:
+        - !Ref myuser 
+
+  mygroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: "paradi-nation"
+      Path: "/myapplication/"
+      ManagedPolicyArns: 
+      - "arn:aws:iam::925229124194:policy/*"
+      
+
+
+
+
